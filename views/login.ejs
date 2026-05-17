@@ -1,0 +1,14 @@
+<%- include('partials/head') %>
+<div class="auth-box">
+  <h2>Acesso ao Sistema</h2>
+  <% if (erro) { %>
+    <div class="status Rejeitado"><%= erro %></div>
+  <% } %>
+  <form method="POST" action="/login" class="form-inline">
+    <input type="text"     name="username" placeholder="Utilizador" required>
+    <input type="password" name="password" placeholder="Palavra-passe" required>
+    <button type="submit" class="btn">Entrar</button>
+  </form>
+  <p class="text-center">Ainda não tem conta? <a href="/registo">Registe-se aqui</a></p>
+</div>
+<%- include('partials/footer') %>

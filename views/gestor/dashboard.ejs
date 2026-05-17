@@ -1,0 +1,119 @@
+<%- include('../partials/head') %>
+<div class="header-row">
+  <h1>Painel de Gestão (Admin)</h1>
+  <a href="/logout" class="btn btn-danger">Sair</a>
+</div>
+
+<% if (mensagem) { %><div class="status Aprovado"><%= mensagem %></div><% } %>
+
+<div class="grid">
+  <!-- Cursos -->
+  <div>
+    <section class="card">
+      <h2>+ Adicionar Curso</h2>
+      <form method="POST" action="/gestor/add-curso" class="form-inline">
+        <input type="text" name="nome_curso" placeholder="Nome do Curso" required>
+        <input type="text" name="sigla_curso" placeholder="Sigla (ex: EI)" required>
+        <button type="submit" name="add_curso" class="btn">Criar Curso</button>
+      </form>
+      <hr>
+      <h3>Cursos Atuais</h3>
+      <table>
+        <% for (const c of cursos) { %>
+          <tr><td><strong><%= c.sigla %></strong></td><td><%= c.nome %></td></tr>
+        <% } %>
+      </table>
+    </section>
+  </div>
+
+  <!-- UCs -->
+  <div>
+    <section class="card">
+      <h2>+ Adicionar Unidade Curricular</h2>
+      <form method="POST" action="/gestor/add-uc" class="form-inline">
+        <input type="text" name="nome_uc" placeholder="Nome da Disciplina" required>
+        <select name="curso_id" required>
+          <option value="">Associar ao Curso...</option>
+          <% for (const c of cursos) { %>
+            <option value="<%= c._id %>"><%= c.sigla %> — <%= c.nome %></option>
+          <% } %>
+        </select>
+        <button type="submit" name="add_uc" class="btn">Criar UC</button>
+      </form>
+      <hr>
+      <h3>Disciplinas (UCs)</h3>
+      <table>
+        <% for (const u of ucs) { %>
+          <tr>
+            <td>[<%= u.curso ? u.curso.sigla : '?' %>]</td>
+            <td><%= u.nome %></td>
+          </tr>
+        <% } %>
+      </table>
+    </section>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- Fichas pendentes -->
+  <div>
+    <section class="card">
+      <h2>Fichas de Aluno Pendentes</h2>
+      <% if (fichas_pendentes.length === 0) { %>
+        <p>Sem fichas pendentes.</p>
+      <% } %>
+      <% for (const f of fichas_pendentes) { %>
+        <div class="item-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="width:100%;display:flex;justify-content:space-between;align-items:center;">
+            <strong><%= f.nome_completo || '(sem nome)' %></strong>
+            (<%= f.utilizador ? f.utilizador.username : '' %>)
+            <span class="status Submetida">Submetida</span>
+          </div>
+          <form method="POST" action="/gestor/validar-ficha" class="actions-row" style="flex-wrap:wrap;width:90%;">
+            <input type="hidden" name="ficha_id" value="<%= f._id %>">
+            <label style="width:100%;"><small>Observações (opcional):</small>
+              <input type="text" name="observacao" placeholder="Comentário" style="width:100%;"></label>
+            <input type="hidden" name="decisao" id="decisao_<%= f._id %>">
+            <button type="submit" onclick="document.getElementById('decisao_<%= f._id %>').value='Aprovada'"
+                    class="btn-mini btn">Aprovar</button>
+            <button type="submit" onclick="document.getElementById('decisao_<%= f._id %>').value='Rejeitada'"
+                    class="btn-mini btn-danger">Rejeitar</button>
+          </form>
+        </div>
+      <% } %>
+    </section>
+  </div>
+
+  <!-- Matrículas pendentes -->
+  <div>
+    <section class="card">
+      <h2>Matrículas Pendentes</h2>
+      <% if (matriculas_pendentes.length === 0) { %>
+        <p>Sem matrículas pendentes.</p>
+      <% } %>
+      <% for (const m of matriculas_pendentes) { %>
+        <div class="item-row actions-row">
+          <span>
+            <strong><%= m.aluno ? m.aluno.username : '?' %></strong><br>
+            <small>
+              <%= m.pauta && m.pauta.uc ? m.pauta.uc.nome : 'UC desconhecida' %>
+              — <%= m.pauta ? m.pauta.ano_letivo : '' %>
+              (<%= m.pauta ? m.pauta.epoca : '' %>)
+            </small>
+          </span>
+          <form method="POST" action="/gestor/validar-matricula" class="actions-row">
+            <input type="hidden" name="matricula_id" value="<%= m._id %>">
+            <input type="hidden" name="decisao" id="dec_mat_<%= m._id %>">
+            <button type="submit"
+                    onclick="document.getElementById('dec_mat_<%= m._id %>').value='Aprovado'"
+                    class="btn-mini">Aprovado</button>
+            <button type="submit"
+                    onclick="document.getElementById('dec_mat_<%= m._id %>').value='Rejeitado'"
+                    class="btn-mini btn-danger">Rejeitado</button>
+          </form>
+        </div>
+      <% } %>
+    </section>
+  </div>
+</div>
+<%- include('../partials/footer') %>

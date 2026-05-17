@@ -1,0 +1,54 @@
+<%- include('../partials/head') %>
+<div class="header-row">
+  <h1>Bem-vindo, <%= username %></h1>
+  <a href="/logout" class="btn btn-danger">Sair</a>
+</div>
+<nav>
+  <a href="/aluno/ficha"     class="btn">Minha Ficha</a>
+  <a href="/aluno/matricula" class="btn">Inscrição UCs</a>
+</nav>
+
+<section class="box">
+  <h2>Minha Ficha</h2>
+  <% if (ficha) { %>
+    <p><strong>Estado:</strong>
+      <span class="status <%= ficha.estado %>"><%= ficha.estado %></span>
+    </p>
+    <p><strong>Curso:</strong> <%= ficha.curso ? ficha.curso.nome : '—' %></p>
+    <% if (ficha.foto_path) { %>
+      <img src="/<%= ficha.foto_path %>" style="max-width:120px;border-radius:8px;" alt="Foto">
+    <% } %>
+    <p><a class="btn btn-mini" href="/aluno/ficha">Editar / Ver ficha</a></p>
+  <% } else { %>
+    <p>Ainda não preencheu a ficha de aluno.</p>
+    <p><a class="btn btn-mini" href="/aluno/ficha">Preencher ficha</a></p>
+  <% } %>
+</section>
+
+<section class="box">
+  <h2>As Minhas Classificações</h2>
+  <% if (!minhas_notas || minhas_notas.length === 0) { %>
+    <p>Ainda não tens inscrições com notas lançadas.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Curso</th><th>Unidade Curricular</th>
+          <th>Ano / Época</th><th>Nota</th><th>Resultado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const n of minhas_notas) { %>
+        <tr>
+          <td><strong><%= n.curso_sigla %></strong></td>
+          <td><%= n.uc_nome %></td>
+          <td><%= n.ano_letivo %> (<%= n.epoca %>)</td>
+          <td><strong><%= n.nota !== null ? Number(n.nota).toFixed(1) : '---' %></strong></td>
+          <td><span class="status <%= n.resultado || '' %>"><%= n.resultado || 'Pendente' %></span></td>
+        </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

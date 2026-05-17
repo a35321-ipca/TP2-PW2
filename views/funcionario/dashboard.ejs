@@ -1,0 +1,92 @@
+<%- include('../partials/head') %>
+<div class="header-row">
+  <h1>Serviços Académicos</h1>
+  <a href="/logout" class="btn btn-danger">Sair</a>
+</div>
+
+<% if (mensagem) { %><div class="status Aprovado"><%= mensagem %></div><% } %>
+
+<div class="grid">
+  <div class="col">
+    <section class="box">
+      <h2>Gerar Pauta</h2>
+      <form method="POST" action="/funcionario/criar-pauta" class="form-inline">
+        <label>Curso:</label>
+        <select name="curso_id" required>
+          <% for (const c of cursos) { %>
+            <option value="<%= c._id %>"><%= c.nome %></option>
+          <% } %>
+        </select>
+
+        <label>UC:</label>
+        <select name="uc_id" required>
+          <% for (const u of ucs) { %>
+            <option value="<%= u._id %>"><%= u.nome %> [<%= u.curso ? u.curso.sigla : '' %>]</option>
+          <% } %>
+        </select>
+
+        <label>Ano Letivo:</label>
+        <input type="text" name="ano_letivo" placeholder="2024/2025" required>
+
+        <label>Época:</label>
+        <select name="epoca">
+          <option value="Normal">Normal</option>
+          <option value="Recurso">Recurso</option>
+          <option value="Especial">Especial</option>
+        </select>
+
+        <button type="submit" class="btn">Criar Pauta</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="box">
+      <h2>Pautas Registadas</h2>
+      <table>
+        <% for (const p of pautas) { %>
+        <tr>
+          <td>
+            <strong><%= p.curso ? p.curso.sigla : '' %></strong> — <%= p.uc ? p.uc.nome : '' %>
+            <br><small><%= p.ano_letivo %> · <%= p.epoca %></small>
+          </td>
+          <td>
+            <a href="/funcionario?editar_pauta=<%= p._id %>#notas" class="btn btn-mini">Notas</a>
+          </td>
+        </tr>
+        <% } %>
+      </table>
+    </section>
+
+    <% if (pauta_selecionada) { %>
+    <section id="notas" class="box highlight-left">
+      <h3>Lançar Notas: <%= pauta_selecionada.uc ? pauta_selecionada.uc.nome : '' %></h3>
+      <form method="POST" action="/funcionario/gravar-notas">
+        <input type="hidden" name="pauta_id" value="<%= pauta_selecionada._id %>">
+        <table>
+          <% for (const ap of pauta_selecionada.alunos) { %>
+          <tr>
+            <td><%= ap.aluno ? ap.aluno.username : '?' %></td>
+            <td>
+              <input type="number"
+                     name="notas[<%= ap.aluno._id %>]"
+                     value="<%= ap.nota !== null ? ap.nota : '' %>"
+                     min="0" max="20" step="0.1" class="small-input">
+            </td>
+            <td>
+              <span class="status <%= ap.resultado || '' %>">
+                <%= ap.resultado || 'Pendente' %>
+              </span>
+            </td>
+          </tr>
+          <% } %>
+        </table>
+        <button type="submit" class="btn full-width" style="margin-top:10px;">
+          Gravar Classificações
+        </button>
+      </form>
+    </section>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>

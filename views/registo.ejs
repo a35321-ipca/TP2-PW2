@@ -1,0 +1,23 @@
+<%- include('partials/head') %>
+<div class="auth-box">
+  <h2>Criar Conta de Aluno</h2>
+  <% if (erro) { %>
+    <div class="status Rejeitado"><%= erro %></div>
+  <% } %>
+  <% if (mensagem) { %>
+    <div class="status Aprovado"><%= mensagem %></div>
+  <% } %>
+  <form method="POST" action="/registo" class="form-inline">
+    <label>Nome de Utilizador:</label>
+    <input type="text"     name="username" placeholder="ex: joao_silva" required>
+    <label>Email:</label>
+    <input type="email"    name="email"    placeholder="email@escola.pt" required>
+    <label>Palavra-passe:</label>
+    <input type="password" name="password" minlength="6" required>
+    <label>Confirmar Palavra-passe:</label>
+    <input type="password" name="confirm_password" minlength="6" required>
+    <button type="submit" class="btn">Registar</button>
+  </form>
+  <p class="text-center">Já tem conta? <a href="/login">Faça login aqui</a></p>
+</div>
+<%- include('partials/footer') %>

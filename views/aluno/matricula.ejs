@@ -1,0 +1,43 @@
+<%- include('../partials/head') %>
+<div class="header-row">
+  <h1>Inscrição em Disciplinas</h1>
+  <a href="/aluno" class="btn">Voltar</a>
+</div>
+
+<% if (mensagem) { %><div class="status Submetida"><%= mensagem %></div><% } %>
+<% if (erro)     { %><div class="status Rejeitado"><%= erro %></div><% } %>
+
+<% if (ficha) { %>
+  <section class="box">
+    <h3>Pautas Disponíveis para o teu Curso</h3>
+    <% if (pautas_disponiveis.length === 0) { %>
+      <p>Ainda não existem pautas disponíveis para o teu curso.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Disciplina (UC)</th><th>Ano Letivo</th><th>Época</th><th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const p of pautas_disponiveis) { %>
+          <tr>
+            <td><%= p.uc.nome %></td>
+            <td><%= p.ano_letivo %></td>
+            <td><%= p.epoca %></td>
+            <td>
+              <form method="POST" action="/aluno/matricula" style="display:inline;">
+                <input type="hidden" name="pauta_id" value="<%= p._id %>">
+                <button type="submit" class="btn btn-mini">Inscrever</button>
+              </form>
+            </td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+<% } else { %>
+  <p>Por favor, aguarda a aprovação da tua ficha de aluno pelo Gestor.</p>
+<% } %>
+<%- include('../partials/footer') %>

@@ -1,0 +1,1 @@
+mongodb://a35321_db_user:Fl0JxnU0ERs8BHj5@ac-65chfvq-shard-00-00.6gjncep.mongodb.net:27017,ac-65chfvq-shard-00-01.6gjncep.mongodb.net:27017,ac-65chfvq-shard-00-02.6gjncep.mongodb.net:27017/?ssl=true&replicaSet=atlas-fof2d6-shard-0&authSource=admin&appName=Cluster0

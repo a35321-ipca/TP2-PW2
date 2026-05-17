@@ -1,0 +1,54 @@
+<%- include('../partials/head') %>
+<div class="header-row">
+  <h1>Minha Ficha de Aluno</h1>
+  <a href="/logout" class="btn btn-danger">Sair</a>
+</div>
+<nav><a href="/aluno" class="btn">Voltar ao Painel</a></nav>
+
+<% if (mensagem) { %><div class="status Aprovado"><%= mensagem %></div><% } %>
+<% if (erro)     { %><div class="status Rejeitado"><%= erro %></div><% } %>
+
+<form method="POST" action="/aluno/ficha" enctype="multipart/form-data" class="box">
+  <label>Nome Completo:</label>
+  <input type="text" name="nome_completo"
+         value="<%= ficha ? ficha.nome_completo || '' : '' %>" required>
+
+  <label>Data de Nascimento:</label>
+  <input type="date" name="data_nascimento"
+         value="<%= ficha && ficha.data_nascimento ? ficha.data_nascimento.toISOString().split('T')[0] : '' %>" required>
+
+  <label>Morada:</label>
+  <input type="text" name="morada"
+         value="<%= ficha ? ficha.morada || '' : '' %>" required>
+
+  <label>Contacto Telefónico:</label>
+  <input type="text" name="contacto"
+         value="<%= ficha ? ficha.contacto || '' : '' %>" required>
+
+  <label>Email:</label>
+  <input type="email" name="email"
+         value="<%= ficha ? ficha.email || '' : '' %>" required>
+
+  <label>Curso:</label>
+  <select name="curso_id" required>
+    <% for (const c of cursos) { %>
+      <option value="<%= c._id %>"
+        <%= ficha && ficha.curso && ficha.curso.toString() === c._id.toString() ? 'selected' : '' %>>
+        <%= c.nome %>
+      </option>
+    <% } %>
+  </select>
+
+  <label>Foto (JPG/PNG até 1MB):</label>
+  <input type="file" name="foto" accept="image/jpeg,image/png">
+
+  <% if (ficha && ficha.foto_path) { %>
+    <div class="text-center" style="margin:10px 0;">
+      <strong>Foto atual:</strong><br>
+      <img src="/<%= ficha.foto_path %>" alt="Foto" style="max-width:120px;border-radius:8px;margin-top:8px;">
+    </div>
+  <% } %>
+
+  <button type="submit" class="btn">Gravar Dados</button>
+</form>
+<%- include('../partials/footer') %>
