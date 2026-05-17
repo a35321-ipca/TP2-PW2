@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, trim: true },
   email:    { type: String, required: true, unique: true, trim: true },
   password: { type: String, required: true },
-  perfil:   { type: String, enum: ['Aluno', 'Funcionario', 'Gestor'], default: 'Aluno' }
+  perfil:   { type: mongoose.Schema.Types.ObjectId, ref: 'Perfil', required: true }
 }, { timestamps: true });
 
 userSchema.pre('save', async function () {

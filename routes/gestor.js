@@ -16,7 +16,7 @@ router.get('/', gestorAuth, async (req, res) => {
   const fichas_pendentes     = await FichaAluno.find({ estado: 'Submetida' }).populate('utilizador', 'username').populate('curso');
   const matriculas_pendentes = await PedidoMatricula.find({ estado: 'Pendente' })
     .populate('aluno', 'username')
-    .populate({ path: 'pauta', populate: [{ path: 'uc' }, { path: 'curso' }] });
+    .populate('funcionario', 'username');
   const cursos  = await Curso.find().sort({ nome: 1 });
   const ucs     = await UnidadeCurricular.find().populate('curso', 'sigla');
 
@@ -80,23 +80,11 @@ router.post('/validar-ficha', gestorAuth, async (req, res) => {
 router.post('/validar-matricula', gestorAuth, async (req, res) => {
   const { matricula_id, decisao } = req.body;
   try {
-    const pedido = await PedidoMatricula.findByIdAndUpdate(
+    await PedidoMatricula.findByIdAndUpdate(
       matricula_id,
       { estado: decisao, data_decisao: new Date(), funcionario: req.session.userId },
       { new: true }
     );
-
-    // Se aprovado, inserir aluno na pauta (evitar duplicados)
-    if (decisao === 'Aprovado' && pedido.pauta) {
-      const pauta = await Pauta.findById(pedido.pauta);
-      if (pauta) {
-        const jaExiste = pauta.alunos.some(a => a.aluno.toString() === pedido.aluno.toString());
-        if (!jaExiste) {
-          pauta.alunos.push({ aluno: pedido.aluno, nota: null, resultado: null });
-          await pauta.save();
-        }
-      }
-    }
 
     res.redirect('/gestor?msg=Matrícula+atualizada');
   } catch (err) {

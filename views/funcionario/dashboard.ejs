@@ -64,7 +64,7 @@
       <form method="POST" action="/funcionario/gravar-notas">
         <input type="hidden" name="pauta_id" value="<%= pauta_selecionada._id %>">
         <table>
-          <% for (const ap of pauta_selecionada.alunos) { %>
+          <% for (const ap of alunos_pauta) { %>
           <tr>
             <td><%= ap.aluno ? ap.aluno.username : '?' %></td>
             <td>

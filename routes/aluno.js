@@ -7,6 +7,7 @@ const User           = require('../models/User');
 const Curso          = require('../models/Curso');
 const FichaAluno     = require('../models/FichaAluno');
 const Pauta          = require('../models/Pauta');
+const PautaAluno     = require('../models/PautaAluno');
 const PedidoMatricula = require('../models/PedidoMatricula');
 
 // --- Multer upload config ---
@@ -36,25 +37,24 @@ router.get('/', alunoAuth, async (req, res) => {
   const aluno_id = req.session.userId;
   const ficha = await FichaAluno.findOne({ utilizador: aluno_id }).populate('curso');
 
-  // Buscar notas de todas as pautas onde o aluno está inscrito
-  const pautas = await Pauta.find({ 'alunos.aluno': aluno_id })
-    .populate('uc')
-    .populate('curso');
+  // Buscar notas de todas as pautas onde o aluno está inscrito (via PautaAluno)
+  const pautasAluno = await PautaAluno.find({ aluno: aluno_id })
+    .populate({
+      path: 'pauta',
+      populate: [
+        { path: 'uc', select: 'nome' },
+        { path: 'curso', select: 'sigla' }
+      ]
+    });
 
-  const minhas_notas = [];
-  for (const p of pautas) {
-    const entrada = p.alunos.find(a => a.aluno.toString() === aluno_id.toString());
-    if (entrada) {
-      minhas_notas.push({
-        uc_nome:     p.uc.nome,
-        curso_sigla: p.curso.sigla,
-        ano_letivo:  p.ano_letivo,
-        epoca:       p.epoca,
-        nota:        entrada.nota,
-        resultado:   entrada.resultado
-      });
-    }
-  }
+  const minhas_notas = pautasAluno.map(pa => ({
+    uc_nome:     pa.pauta.uc.nome,
+    curso_sigla: pa.pauta.curso.sigla,
+    ano_letivo:  pa.pauta.ano_letivo,
+    epoca:       pa.pauta.epoca,
+    nota:        pa.nota,
+    resultado:   pa.resultado
+  }));
 
   res.render('aluno/dashboard', {
     titulo: 'Painel do Aluno',
@@ -137,22 +137,21 @@ router.post('/matricula', alunoAuth, async (req, res) => {
   try {
     // Verificar se já está na pauta
     const pautaDoc = await Pauta.findById(pauta_id);
-    const jaInscrito = pautaDoc && pautaDoc.alunos.some(a => a.aluno.toString() === aluno_id.toString());
+    const jaInscrito = await PautaAluno.findOne({ pauta: pauta_id, aluno: aluno_id });
     if (jaInscrito) return res.redirect('/aluno/matricula?erro=Já+estás+inscrito+nesta+disciplina');
 
     // Verificar pedido pendente
-    const jaPendente = await PedidoMatricula.findOne({ aluno: aluno_id, pauta: pauta_id, estado: 'Pendente' });
-    if (jaPendente) return res.redirect('/aluno/matricula?erro=Já+tens+um+pedido+pendente+para+esta+pauta');
+    const jaPendente = await PedidoMatricula.findOne({ aluno: aluno_id, ano_letivo: new Date().getFullYear().toString(), estado: 'Pendente' });
+    if (jaPendente) return res.redirect('/aluno/matricula?erro=Já+tens+um+pedido+pendente');
 
     const pauta = await Pauta.findById(pauta_id);
     await PedidoMatricula.create({
       aluno: aluno_id,
-      pauta: pauta_id,
       ano_letivo: pauta.ano_letivo,
       estado: 'Pendente'
     });
 
-    res.redirect('/aluno/matricula?msg=Pedido+enviado!+Aguarda+aprovação+do+gestor');
+    res.redirect('/aluno/matricula?msg=Pedido+enviado!+Aguarda+aprovação');
   } catch (err) {
     res.redirect('/aluno/matricula?erro=' + encodeURIComponent(err.message));
   }

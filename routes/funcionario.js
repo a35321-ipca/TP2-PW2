@@ -4,6 +4,7 @@ const { isAuth, isPerfil } = require('../middleware/auth');
 const Curso          = require('../models/Curso');
 const UnidadeCurricular = require('../models/UnidadeCurricular');
 const Pauta          = require('../models/Pauta');
+const PautaAluno     = require('../models/PautaAluno');
 const FichaAluno     = require('../models/FichaAluno');
 const PedidoMatricula = require('../models/PedidoMatricula');
 
@@ -22,16 +23,23 @@ router.get('/', funcAuth, async (req, res) => {
 
   const pauta_selecionada_id = req.query.editar_pauta || null;
   let pauta_selecionada = null;
+  let alunos_pauta = [];
+  
   if (pauta_selecionada_id) {
     pauta_selecionada = await Pauta.findById(pauta_selecionada_id)
       .populate('uc')
-      .populate('alunos.aluno', 'username');
+      .populate('curso');
+    
+    // Buscar alunos desta pauta na coleção PautaAluno
+    alunos_pauta = await PautaAluno.find({ pauta: pauta_selecionada_id })
+      .populate('aluno', 'username');
   }
 
   res.render('funcionario/dashboard', {
     titulo: 'Serviços Académicos',
     cursos, ucs, pautas,
     pauta_selecionada,
+    alunos_pauta,
     mensagem: req.query.msg || null
   });
 });
@@ -48,8 +56,7 @@ router.post('/criar-pauta', funcAuth, async (req, res) => {
       curso: curso_id,
       ano_letivo,
       epoca,
-      funcionario: req.session.userId,
-      alunos: []
+      funcionario: req.session.userId
     });
 
     // Adicionar automaticamente alunos com matrícula aprovada nesse curso/ano
@@ -63,8 +70,16 @@ router.post('/criar-pauta', funcAuth, async (req, res) => {
     });
 
     const alunosUnicos = [...new Set(pedidosAprovados.map(p => p.aluno.toString()))];
-    pauta.alunos = alunosUnicos.map(id => ({ aluno: id, nota: null, resultado: null }));
-    await pauta.save();
+    
+    // Criar registos em PautaAluno para cada aluno
+    for (const aluno_id of alunosUnicos) {
+      await PautaAluno.create({
+        pauta: pauta._id,
+        aluno: aluno_id,
+        nota: null,
+        resultado: null
+      });
+    }
 
     res.redirect('/funcionario?msg=Pauta+criada+com+sucesso');
   } catch (err) {
@@ -78,16 +93,16 @@ router.post('/criar-pauta', funcAuth, async (req, res) => {
 router.post('/gravar-notas', funcAuth, async (req, res) => {
   const { pauta_id, notas } = req.body;
   try {
-    const pauta = await Pauta.findById(pauta_id);
     for (const aluno_id in notas) {
       const valor = notas[aluno_id] === '' ? null : parseFloat(notas[aluno_id]);
-      const entrada = pauta.alunos.find(a => a.aluno.toString() === aluno_id);
-      if (entrada) {
-        entrada.nota = valor;
-        entrada.resultado = valor !== null ? (valor >= 10 ? 'Aprovado' : 'Reprovado') : null;
+      const pautaAluno = await PautaAluno.findOne({ pauta: pauta_id, aluno: aluno_id });
+      
+      if (pautaAluno) {
+        pautaAluno.nota = valor;
+        pautaAluno.resultado = valor !== null ? (valor >= 10 ? 'Aprovado' : 'Reprovado') : null;
+        await pautaAluno.save();
       }
     }
-    await pauta.save();
     res.redirect('/funcionario?editar_pauta=' + pauta_id + '&msg=Notas+atualizadas');
   } catch (err) {
     res.redirect('/funcionario?msg=Erro:+' + encodeURIComponent(err.message));
