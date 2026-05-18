@@ -52,24 +52,35 @@ router.get('/registo', (req, res) => {
 // POST /registo
 router.post('/registo', async (req, res) => {
   const { username, email, password, confirm_password } = req.body;
+  console.log('📝 Registo tentativa:', { username, email });
+  
   if (password !== confirm_password) {
+    console.log('❌ Passwords não coincidem');
     return res.render('registo', { erro: 'As palavras-passe não coincidem.', mensagem: null, titulo: 'Criar Conta' });
   }
   try {
     const existe = await User.findOne({ $or: [{ username }, { email }] });
     if (existe) {
+      console.log('❌ Utilizador ou email já existe');
       return res.render('registo', { erro: 'Username ou email já em uso.', mensagem: null, titulo: 'Criar Conta' });
     }
     
     // Buscar ObjectId do perfil 'Aluno'
     const perfilAluno = await Perfil.findOne({ nome: 'Aluno' });
+    console.log('🔍 Perfil Aluno:', perfilAluno ? 'encontrado' : 'NÃO encontrado');
+    
     if (!perfilAluno) {
+      console.log('❌ Perfil Aluno não encontrado');
       return res.render('registo', { erro: 'Erro ao registar: Perfil Aluno não encontrado.', mensagem: null, titulo: 'Criar Conta' });
     }
     
-    await User.create({ username, email, password, perfil: perfilAluno._id });
+    console.log('✍️  Criando novo utilizador...');
+    const novoUser = await User.create({ username, email, password, perfil: perfilAluno._id });
+    console.log('✅ Utilizador criado:', novoUser._id);
+    
     res.render('registo', { erro: null, mensagem: 'Registo efetuado! Já pode fazer login.', titulo: 'Criar Conta' });
   } catch (err) {
+    console.error('❌ Erro no registo:', err.message);
     res.render('registo', { erro: 'Erro ao registar: ' + err.message, mensagem: null, titulo: 'Criar Conta' });
   }
 });
